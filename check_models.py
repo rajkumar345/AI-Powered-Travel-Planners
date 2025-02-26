@@ -1,12 +1,9 @@
 import google.generativeai as genai
-from dotenv import load_dotenv
-import os
+import streamlit as st
 
-# Load environment variables
-load_dotenv()
+# Get API Key from Streamlit Secrets
+API_KEY = st.secrets["GOOGLE_API_KEY"]
 
-# Retrieve API key from .env file
-API_KEY = os.getenv("GOOGLE_API_KEY")
 
 if not API_KEY:
     print("⚠️ API Key is missing! Please check your .env file.")

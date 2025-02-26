@@ -1,13 +1,12 @@
 import streamlit as st
 import google.generativeai as genai
 from deep_translator import GoogleTranslator
-from dotenv import load_dotenv
-import os
 import textwrap
+import streamlit as st
 
-# Load environment variables
-load_dotenv()
-API_KEY = os.getenv("GOOGLE_API_KEY")
+# Get API Key from Streamlit Secrets
+API_KEY = st.secrets["GOOGLE_API_KEY"]
+
 
 # Validate API Key
 if not API_KEY:
