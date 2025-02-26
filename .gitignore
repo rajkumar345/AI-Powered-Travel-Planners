@@ -13,3 +13,4 @@ Thumbs.db
 # Ignore logs and temporary files
 *.log
 logs/
+.streamlit/secrets.toml
