@@ -2,7 +2,12 @@ import streamlit as st
 import google.generativeai as genai
 from deep_translator import GoogleTranslator
 import textwrap
+import time
+import logging
 from datetime import datetime, timedelta
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 # Get API Key from Streamlit Secrets
 try:
@@ -100,12 +105,7 @@ def main():
                 special_needs,
             )
 
-            # Get translated heading
-            translated_heading = HEADINGS_TRANSLATION.get(language, "📍 Travel Recommendations:")
-
-            st.subheader(translated_heading)
-            translated_text = translate_text(travel_options, LANGUAGES[language])
-            st.markdown(translated_text)
+            display_travel_recommendations(travel_options, language)
 
 def find_travel_options(source, destination, travel_mode, travel_date, return_date, special_needs):
     assistance_text = {
@@ -114,24 +114,32 @@ def find_travel_options(source, destination, travel_mode, travel_date, return_da
         "None": "",
     }[special_needs]
 
-    model = genai.GenerativeModel("gemini-1.5-pro-latest")
+    model = genai.GenerativeModel("gemini-2.0-flash-exp")
 
     formatted_date = f"on {travel_date.strftime('%B %d, %Y')}"
     return_date_text = f" and return on {return_date.strftime('%B %d, %Y')}" if return_date else ""
 
     prompt = f"Find {travel_mode.lower()} travel options from {source} to {destination} {formatted_date}{return_date_text}.{assistance_text}"
-
-    # AI should include details about travelers and car rentals instead of form inputs
-    if travel_mode == "Flights":
-        prompt += " Suggest the best class options based on budget and comfort."
-    elif travel_mode == "Cars":
-        prompt += " Recommend suitable car rental services and pricing."
+    prompt += " Consider weather conditions for safer travel recommendations."
 
     try:
+        logging.info("API Call Triggered")
+        time.sleep(1)  # Throttle requests to prevent rate limit errors
         response = model.generate_content(prompt)
         return response.text if response and hasattr(response, "text") else "No response generated."
     except Exception as e:
-        return f"⚠️ Error generating response: {str(e)}"
+        logging.error(f"API call failed: {str(e)}")
+        return "⚠️ Unable to fetch travel recommendations due to API limits. Please try again later."
+
+def display_travel_recommendations(recommendations, language):
+    translated_heading = HEADINGS_TRANSLATION.get(language, "📍 Travel Recommendations:")
+    
+    st.subheader(translated_heading)
+    
+    # Correcting HTML to prevent unnecessary closing tags like </div>
+    formatted_text = recommendations.replace("[", "").replace("]", "")  # Remove unintended formatting issues
+    
+    st.markdown(formatted_text, unsafe_allow_html=True)
 
 def translate_text(text, target_lang):
     try:
